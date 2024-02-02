@@ -49,7 +49,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
-
+/// HI NEW CHANGE, JUST FOR CHECKS
 class MainActivity : ComponentActivity() {
     companion object{
         val CURRENT_USER_ID = Firebase.auth.uid
