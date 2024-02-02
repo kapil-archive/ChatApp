@@ -58,6 +58,7 @@ import com.archive.chatapp.MainActivity
 import com.archive.chatapp.presentation.sign_in.ChatUser
 import com.archive.chatapp.presentation.sign_in.UserData
 import com.archive.chatapp.ui.screens.dmscreen.getMessageIdFromState
+import com.archive.chatapp.ui.screens.signin.SignInViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,6 +68,7 @@ fun ChatScreen(
     onChatClick: (ChatUser) -> Unit
 ) {
     val viewModel: ChatViewModel = viewModel()
+    val signInViewModel:SignInViewModel = viewModel()
     val chatUsers by viewModel.chatUsers.collectAsState()
     val users by viewModel.users.collectAsState()
     Box(

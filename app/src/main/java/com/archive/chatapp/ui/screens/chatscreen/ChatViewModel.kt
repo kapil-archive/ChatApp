@@ -124,7 +124,6 @@ class ChatViewModel: ViewModel() {
             }.addOnFailureListener {
                 Log.i("DM CHAT",it.message.toString())
             }
-        getAllUsers()
     }
     init {
         getAllUsers()

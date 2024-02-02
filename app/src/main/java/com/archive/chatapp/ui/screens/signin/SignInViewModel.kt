@@ -130,12 +130,22 @@ class SignInViewModel: ViewModel() {
     val email = _email.asStateFlow()
     private val _password = MutableStateFlow("")
     val password = _password.asStateFlow()
+    private val _phone = MutableStateFlow("")
+    val phone = _phone.asStateFlow()
+    private val _otp = MutableStateFlow("")
+    val otp = _otp.asStateFlow()
 
     fun updateEmail(eml:String){
         _email.update { eml }
     }
     fun updatePassword(pass:String){
         _password.update { pass }
+    }
+    fun updatePhone(phn:String){
+        _phone.update { phn }
+    }
+    fun updateOTP(code:String){
+        _otp.update { code }
     }
     fun onSignInResult(result: SignInResult) {
         _state.update { it.copy(

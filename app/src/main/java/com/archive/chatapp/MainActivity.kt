@@ -1,5 +1,6 @@
 package com.archive.chatapp
 
+import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageInfo
@@ -44,11 +45,21 @@ import com.facebook.FacebookSdk
 import com.facebook.appevents.AppEventsLogger
 import com.facebook.login.LoginManager
 import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseException
+import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthMissingActivityForRecaptchaException
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
+
 /// HI NEW CHANGE, JUST FOR CHECKS
 class MainActivity : ComponentActivity() {
     companion object{
@@ -73,8 +84,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+
+//        phoneAuth(this)
+
+
         AppEventsLogger.activateApp(Application())
-        val callbackManager = CallbackManager.Factory.create()
         setContent {
                 // A surface container using the 'background' color from the theme
             ChatAppTheme {
@@ -122,6 +137,9 @@ class MainActivity : ComponentActivity() {
                                     viewModel.resetState()
                                 }
                             }
+                            var verificationId by remember {
+                                mutableStateOf("")
+                            }
                             SignInScreen(
                                 state = state,
                                 onSignInClick = {
@@ -134,7 +152,13 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 },
-                                onFbClick = login
+                                onFbClick = login,
+                                onOtpClick = { phoneAuth(this@MainActivity,it){
+                                    verificationId = it
+                                } },
+                                onSubmitClick = {
+                                    signInWithPhoneAuthCredential(PhoneAuthProvider.getCredential(verificationId, it),this@MainActivity)
+                                }
                             )
                         }
                         composable("profile") {
@@ -180,4 +204,89 @@ class MainActivity : ComponentActivity() {
 val logout = {
     LoginManager.getInstance().logOut()
     Log.i("FB","Logged out")
+}
+fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential,activity: Activity) {
+    val auth = Firebase.auth
+    auth.signInWithCredential(credential)
+        .addOnCompleteListener(activity) { task ->
+            if (task.isSuccessful) {
+                // Sign in success, update UI with the signed-in user's information
+                Log.d("TAG", "signInWithCredential:success")
+                val user = task.result?.user
+                // Update UI or perform other actions as needed
+            } else {
+                // Sign in failed, display a message and update the UI
+                Log.w("TAG", "signInWithCredential:failure", task.exception)
+                // Handle the failure, for example, show an error message
+            }
+        }
+}
+
+
+fun phoneAuth(activity: Activity,testPhoneNumber:String,verificationId: (String)->Unit){
+    // Declare these variables at the top of your activity or class
+    lateinit var auth: FirebaseAuth
+    lateinit var callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks
+    var storedVerificationId: String? = null
+    var resendToken: PhoneAuthProvider.ForceResendingToken? = null
+
+// ...
+
+// Initialize Firebase auth in your onCreate or wherever appropriate
+    auth = Firebase.auth
+
+    fun startPhoneNumberVerification(phoneNumber: String) {
+        val options = PhoneAuthOptions.newBuilder(auth)
+            .setPhoneNumber(phoneNumber)
+            .setTimeout(60L, TimeUnit.SECONDS)
+            .setActivity(activity)
+            .setCallbacks(callbacks)
+            .build()
+
+        PhoneAuthProvider.verifyPhoneNumber(options)
+    }
+
+// Set up callbacks for PhoneAuth
+    callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+            // This callback will be invoked in two situations:
+            // 1 - Instant verification.
+            // 2 - Auto-retrieval.
+            Log.d("TAG", "onVerificationCompleted:$credential")
+        }
+
+        override fun onVerificationFailed(e: FirebaseException) {
+            Log.w("TAG", "onVerificationFailed", e)
+            // Handle verification failure
+        }
+
+        override fun onCodeSent(
+            verificationId: String,
+            token: PhoneAuthProvider.ForceResendingToken
+        ) {
+            Log.d("TAG", "onCodeSent:$verificationId")
+            // Save verification ID and resending token for later use
+            storedVerificationId = verificationId
+            resendToken = token
+
+            // In a real-world scenario, you would send the verification code to the user's device.
+            // For testing purposes, we manually trigger signInWithPhoneAuthCredential using test values.
+            val testOTP = "999999" // Replace with your test OTP
+            verificationId(verificationId)
+        }
+    }
+
+// ...
+
+    // Function to initiate phone number verification
+
+
+    // Function to handle sign-in with PhoneAuthCredential
+
+
+// ...
+
+// Now you can call startPhoneNumberVerification with your test phone number
+     // Replace with your test phone number
+    startPhoneNumberVerification(testPhoneNumber)
 }
