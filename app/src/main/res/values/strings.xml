@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Chat App</string>
+    //Google sign in
+    <string name="web_client_id">1027320121135-2pmmo95fdreqfg2a80i81fi09gfm551m.apps.googleusercontent.com</string>
+    //Facebook sign in
+    <string name="facebook_app_id">3341428519494969</string>
+    <string name="fb_login_protocol_scheme">fb3341428519494969</string>
+    <string name="facebook_client_token">b19e3f289d9f9bc222d9ebf6418a928d</string>
+
+
+</resources>
