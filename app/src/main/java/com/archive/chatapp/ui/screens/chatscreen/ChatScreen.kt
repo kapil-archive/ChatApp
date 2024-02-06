@@ -59,6 +59,8 @@ import com.archive.chatapp.presentation.sign_in.ChatUser
 import com.archive.chatapp.presentation.sign_in.UserData
 import com.archive.chatapp.ui.screens.dmscreen.getMessageIdFromState
 import com.archive.chatapp.ui.screens.signin.SignInViewModel
+import java.time.Instant
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -266,7 +268,8 @@ fun ChatCard(user: ChatUser, onCLick: () -> Unit) {
                         Text(
                             text = user.lastMessage?.timestamp?.let {
                                 com.archive.chatapp.ui.screens.dmscreen.timeStampToHour(
-                                    it
+                                    it,
+                                    Instant.ofEpochSecond(it.seconds).atZone(ZoneId.systemDefault()).toLocalDate() == MainActivity.currentSystemDate
                                 )
                             } ?: "",
                             style = MaterialTheme.typography.bodySmall // Use title size for name

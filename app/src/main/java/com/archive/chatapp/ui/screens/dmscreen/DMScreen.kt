@@ -46,12 +46,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.archive.chatapp.MainActivity
+import com.archive.chatapp.MainActivity.Companion.currentSystemDate
 import com.archive.chatapp.R
 import com.archive.chatapp.data.model.LastMessage
 import com.archive.chatapp.data.model.Message
 import com.archive.chatapp.presentation.sign_in.ChatUser
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -222,7 +225,9 @@ fun MessageCard(
                     .padding(top = 0.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ){
-                Text(text = message.timestamp?.let { timeStampToHour(it) } ?: "",
+                Text(text = message.timestamp?.let {
+                    timeStampToHour(
+                        it,true) } ?: "",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.5f)
                 )
@@ -265,11 +270,12 @@ fun TypeBox(
     )
 }
 
-fun timeStampToHour(timestamp: Timestamp): String {
+fun timeStampToHour(timestamp: Timestamp,isSameDay:Boolean): String {
     val time = timestamp.toDate()
-    val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-    Log.i("TESTING TIME", dateFormat.format(time))
-    return dateFormat.format(time)
+    val hourFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+    val timeDate = Instant.ofEpochSecond(timestamp.seconds).atZone(ZoneId.systemDefault()).toLocalDate()
+    return if (isSameDay) hourFormat.format(time) else dateFormat.format(time)
 }
 
 fun getMessageIdFromState(messageState: Long): Int {

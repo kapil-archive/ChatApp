@@ -47,6 +47,7 @@ import com.facebook.login.LoginManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseException
 import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthMissingActivityForRecaptchaException
@@ -58,12 +59,19 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 /// HI NEW CHANGE, JUST FOR CHECKS
 class MainActivity : ComponentActivity() {
     companion object{
         val CURRENT_USER_ID = Firebase.auth.uid
+        val currentSystemDate = Instant.ofEpochSecond(Timestamp.now().seconds).atZone(ZoneId.systemDefault()).toLocalDate()
+        const val SIGNUP_SCREEN = "Sign Up"
+        const val SIGNIN_SCREEN = "Sign In"
+        const val CHAT_SCREEN = "Chats"
+        const val DM_SCREEN = "DM"
     }
     private val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
@@ -85,126 +93,146 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+//        FirebaseAuth.getInstance().createUserWithEmailAndPassword("kapilbamnawat2003@gmail.com", "password")
+//            .addOnCompleteListener(this) { task ->
+//                if (task.isSuccessful) {
+//                    Log.i("EMAIL","SIGNUP SUCCESS")
+//                    // Sign up success
+//                } else {
+//                    Log.e("EMAIL","ERROR ${task.exception?.message}")
+//                    FirebaseAuth.getInstance().signInWithEmailAndPassword("kapilbamnawat2003@gmail.com", "password")
+//                        .addOnCompleteListener(this) { task1 ->
+//                            if (task1.isSuccessful) {
+//                                Log.i("EMAIL1","SIGNUP SUCCESS")
+//                                // Sign up success
+//                            } else {
+//                                Log.e("EMAIL1","ERROR ${task1.exception?.message}")
+//                                // If sign in fails, display a message to the user.
+//                            }
+//                        }
+//                    // If sign in fails, display a message to the user.
+//                }
+//            }
 
 //        phoneAuth(this)
 
 
-        AppEventsLogger.activateApp(Application())
-        setContent {
-                // A surface container using the 'background' color from the theme
-            ChatAppTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    var chatUser by remember {
-                        mutableStateOf<ChatUser?>(null)
-                    }
-                    val viewModel: SignInViewModel = viewModel()
-                    val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = if (googleAuthUiClient.getSignedInUser() != null) "profile" else "sign_in") {
-                        composable("sign_in") {
-//                            val viewModel: SignInViewModel = viewModel()
-                            val state by viewModel.state.collectAsState()
-                            Log.d("NAVCONTROLLER",navController.currentDestination?.route?:"null")
-                            LaunchedEffect(key1 = Unit) {
-                                if (googleAuthUiClient.getSignedInUser() != null) {
-                                    navController.navigate("profile")
-                                }
-                            }
-                            val launcher = rememberLauncherForActivityResult(
-                                contract = ActivityResultContracts.StartIntentSenderForResult(),
-                                onResult = { result ->
-                                    if (result.resultCode == RESULT_OK) {
-                                        lifecycleScope.launch {
-                                            val signInResult =
-                                                googleAuthUiClient.signInWithIntent(
-                                                    intent = result.data ?: return@launch
-                                                )
-                                            viewModel.onSignInResult(signInResult)
-                                        }
-                                    }
-                                }
-                            )
-                            LaunchedEffect(key1 = state.isSignInSuccessful) {
-                                if (state.isSignInSuccessful) {
-                                    Toast.makeText(
-                                        applicationContext,
-                                        "Sign in successful",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                    navController.navigate("profile")
-                                    viewModel.resetState()
-                                }
-                            }
-                            var verificationId by remember {
-                                mutableStateOf("")
-                            }
-                            SignInScreen(
-                                state = state,
-                                onSignInClick = {
-                                    lifecycleScope.launch {
-                                        val signInIntentSender = googleAuthUiClient.signIn()
-                                        launcher.launch(
-                                            IntentSenderRequest.Builder(
-                                                signInIntentSender ?: return@launch
-                                            ).build()
-                                        )
-                                    }
-                                },
-                                onFbClick = login,
-                                onOtpClick = { phoneAuth(this@MainActivity,it){
-                                    verificationId = it
-                                } },
-                                onSubmitClick = {
-                                    signInWithPhoneAuthCredential(PhoneAuthProvider.getCredential(verificationId, it),this@MainActivity)
-                                }
-                            )
-                        }
-                        composable("profile") {
-                            googleAuthUiClient.getSignedInUser()?.let { it1 ->
-                                ChatScreen(
-                                    user = it1,
-                                    onSignOut = { lifecycleScope.launch {
-                                        googleAuthUiClient.signOut()
-                                        logout()
-                                        Toast.makeText(
-                                            applicationContext,
-                                            "Signed out",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-
-                                        navController.popBackStack()
-                                    } },
-                                    onChatClick = {it->
-                                        chatUser = it
-                                        navController.navigate("dm")
-                                    })
-                            }
-                        }
-                        composable("dm"){
-                            chatUser?.let { it1 ->
-                                DMScreen(chatUser = it1){
-                                    navController.popBackStack()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private val login = {
-        LoginManager.getInstance().logIn(this, CallbackManager.Factory.create(), listOf("email","public_profile"))
-    }
-
-
-}
-val logout = {
-    LoginManager.getInstance().logOut()
-    Log.i("FB","Logged out")
-}
+//        AppEventsLogger.activateApp(Application())
+//        setContent {
+//                // A surface container using the 'background' color from the theme
+//            ChatAppTheme {
+//                Surface(
+//                    modifier = Modifier.fillMaxSize(),
+//                    color = MaterialTheme.colorScheme.background
+//                ) {
+//                    var chatUser by remember {
+//                        mutableStateOf<ChatUser?>(null)
+//                    }
+//                    val viewModel: SignInViewModel = viewModel()
+//                    val navController = rememberNavController()
+//                    NavHost(navController = navController, startDestination = if (googleAuthUiClient.getSignedInUser() != null) "profile" else "sign_in") {
+//                        composable("sign_in") {
+////                            val viewModel: SignInViewModel = viewModel()
+//                            val state by viewModel.state.collectAsState()
+//                            Log.d("NAVCONTROLLER",navController.currentDestination?.route?:"null")
+//                            LaunchedEffect(key1 = Unit) {
+//                                if (googleAuthUiClient.getSignedInUser() != null) {
+//                                    navController.navigate("profile")
+//                                }
+//                            }
+//                            val launcher = rememberLauncherForActivityResult(
+//                                contract = ActivityResultContracts.StartIntentSenderForResult(),
+//                                onResult = { result ->
+//                                    if (result.resultCode == RESULT_OK) {
+//                                        lifecycleScope.launch {
+//                                            val signInResult =
+//                                                googleAuthUiClient.signInWithIntent(
+//                                                    intent = result.data ?: return@launch
+//                                                )
+//                                            viewModel.onSignInResult(signInResult)
+//                                        }
+//                                    }
+//                                }
+//                            )
+//                            LaunchedEffect(key1 = state.isSignInSuccessful) {
+//                                if (state.isSignInSuccessful) {
+//                                    Toast.makeText(
+//                                        applicationContext,
+//                                        "Sign in successful",
+//                                        Toast.LENGTH_LONG
+//                                    ).show()
+//                                    navController.navigate("profile")
+//                                    viewModel.resetState()
+//                                }
+//                            }
+//                            var verificationId by remember {
+//                                mutableStateOf("")
+//                            }
+//                            SignInScreen(
+//                                state = state,
+//                                onSignInClick = {
+//                                    lifecycleScope.launch {
+//                                        val signInIntentSender = googleAuthUiClient.signIn()
+//                                        launcher.launch(
+//                                            IntentSenderRequest.Builder(
+//                                                signInIntentSender ?: return@launch
+//                                            ).build()
+//                                        )
+//                                    }
+//                                },
+//                                onFbClick = login,
+//                                onOtpClick = { phoneAuth(this@MainActivity,it){
+//                                    verificationId = it
+//                                } },
+//                                onSubmitClick = {
+//                                    signInWithPhoneAuthCredential(PhoneAuthProvider.getCredential(verificationId, it),this@MainActivity)
+//                                }
+//                            )
+//                        }
+//                        composable("profile") {
+//                            googleAuthUiClient.getSignedInUser()?.let { it1 ->
+//                                ChatScreen(
+//                                    user = it1,
+//                                    onSignOut = { lifecycleScope.launch {
+//                                        googleAuthUiClient.signOut()
+//                                        logout()
+//                                        Toast.makeText(
+//                                            applicationContext,
+//                                            "Signed out",
+//                                            Toast.LENGTH_LONG
+//                                        ).show()
+//
+//                                        navController.popBackStack()
+//                                    } },
+//                                    onChatClick = {it->
+//                                        chatUser = it
+//                                        navController.navigate("dm")
+//                                    })
+//                            }
+//                        }
+//                        composable("dm"){
+//                            chatUser?.let { it1 ->
+//                                DMScreen(chatUser = it1){
+//                                    navController.popBackStack()
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    private val login = {
+//        LoginManager.getInstance().logIn(this, CallbackManager.Factory.create(), listOf("email","public_profile"))
+//    }
+//
+//
+//}
+//val logout = {
+//    LoginManager.getInstance().logOut()
+//    Log.i("FB","Logged out")
+}}
 fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential,activity: Activity) {
     val auth = Firebase.auth
     auth.signInWithCredential(credential)
